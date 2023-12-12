@@ -48,25 +48,26 @@ For building follow (illustrated for the GPU version):
     sudo apt update
     sudo apt install cmake
     sudo apt install libglew-dev
+
     # build pyfusion
     # use libfusioncpu alternatively!
     cd libfusiongpu
     mkdir build
     cd build
     cmake ..
-    make # convert compute_30 and sm_30 into compute_75 and sm_75 in CMakeListst.txt!!
+    make # converted compute_30 and sm_30 into compute_75 and sm_75 in CMakeListst.txt!!
     cd ..
-    python setup.py build_ext --inplace # comment out the "tp_print"s and change exc_... into curexc_...
+    python setup.py build_ext --inplace # commented out the "tp_print"s and changed exc_... into curexc_...
     
     cd ..
     # build pyrender
     cd librender
-    python setup.py build_ext --inplace # comment out the "tp_print"s and change exc_... into curexc_...
+    python setup.py build_ext --inplace # commented out the "tp_print"s and changed exc_... into curexc_...
     
     cd ..
     # build PyMCubes
     cd libmcubes
-    python setup.py build_ext --inplace # change exc_... into curexc_...
+    python setup.py build_ext --inplace # changed exc_... into curexc_...
 
 ## Usage
 
