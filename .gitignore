@@ -1,7 +1,7 @@
 # examples
-.examples/1_scaled
-.examples/2_depth
-.examples/2_watertight
+examples/1_scaled
+examples/2_depth
+examples/2_watertight
 
 # pycache
 __pycache__/

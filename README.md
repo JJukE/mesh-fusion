@@ -1,5 +1,7 @@
 # Watertight and Simplified Meshes through TSDF Fusion
 
+My version of [https://github.com/autonomousvision/occupancy_networks/tree/master/external/mesh-fusion].
+
 This repository contains a simply Python pipeline for obtaining watertight
 and simplified meshes from arbitrary triangular meshes, given in `.off` format.
 The approach is largely based on adapted versions of Gernot Riegler's
@@ -81,7 +83,7 @@ First, scale the models using:
 Now the models can be rendered, per default, 100 views (uniformly sampled
 on a sphere) will be used:
 
-    python 2_fusion.py --mode=render --in_dir=exammples/1_scaled/ --out_dir=examples/2_depth/
+    python 2_fusion.py --mode=render --in_dir=examples/1_scaled/ --out_dir=examples/2_depth/
 
 The details of rendering can be controlled using the following options:
 
@@ -131,7 +133,7 @@ especially remotely (e.g. through ssh) on machines without monitor.**
 Finally, simplification is performed using `meshlabserver`; make sure to have
 it installed and run
 
-    python 3_1_simplify.py --in_dir=examples/2_watertight/ --out_dir=examples/3_out/
+    python 3_simplify.py --in_dir=examples/2_watertight/ --out_dir=examples/3_out/
 
 The result of all steps is illustrated in the screenshot above.
 
