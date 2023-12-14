@@ -6,6 +6,7 @@ from scipy.interpolate import RegularGridInterpolator as rgi
 import common
 import argparse
 import ntpath
+from pathlib import Path
 
 # Import shipped libraries.
 import librender
@@ -66,7 +67,7 @@ class Fusion:
         :return: parser
         """
 
-        parser = argparse.ArgumentParser(description='Scale a set of meshes stored as OFF files.')
+        parser = argparse.ArgumentParser(description='Scale a set of meshes stored as OBJ files.')
         parser.add_argument('--mode', type=str, default='render',
                             help='Operation mode: render, fuse or sample.')
         input_group = parser.add_mutually_exclusive_group(required=True)
@@ -86,8 +87,8 @@ class Fusion:
 
         parser.add_argument('--n_points', type=int, default=100000,
                             help='Number of points to sample per model.')
-        parser.add_argument('--n_views', type=int, default=100,
-                            help='Number of views per model.')
+        parser.add_argument('--n_views', type=int, default=20,
+                            help='Number of views per model.') # TODO: 20 vs 100?
         parser.add_argument('--image_height', type=int, default=640,
                             help='Depth image height.')
         parser.add_argument('--image_width', type=int, default=640,
@@ -122,10 +123,13 @@ class Fusion:
         :param directory: path to directory
         :return: list of files
         """
-
-        files = []
-        for filename in os.listdir(directory):
-            files.append(os.path.normpath(os.path.join(directory, filename)))
+        
+        if self.options.mode == "render":
+            files = [file for file in Path(directory).glob("**/*model_scaled.obj")]
+        elif self.options.mode == "fuse":
+            files = [file for file in Path(directory).glob("**/*rendered_{}.h5".format(self.options.n_views))]
+        else:
+            raise NotImplementedError
 
         return files
 
@@ -146,15 +150,16 @@ class Fusion:
         return files
 
     def get_outpath(self, filepath):
-        filename = os.path.basename(filepath)
+        model_id = filepath.parts[-2]
+        filename = "model"
         if self.options.mode == 'render':
-            outpath = os.path.join(self.options.out_dir, filename + '.h5')
+            outpath = os.path.join(self.options.out_dir, model_id, filename + '_rendered_{}.h5'.format(self.options.n_views))
         elif self.options.mode == 'fuse':
             modelname = os.path.splitext(os.path.splitext(filename)[0])[0]
-            outpath = os.path.join(self.options.out_dir, modelname + '.off')
+            outpath = os.path.join(self.options.out_dir, model_id, modelname + '_fused_{}.obj'.format(self.options.n_views))
         elif self.options.mode == 'sample':
             modelname = os.path.splitext(os.path.splitext(filename)[0])[0]
-            outpath = os.path.join(self.options.out_dir, modelname + '.npz')
+            outpath = os.path.join(self.options.out_dir, model_id, modelname + '.npz')
 
         return outpath
         
@@ -246,7 +251,7 @@ class Fusion:
             # (by subtracting a constant from the depth map).
             # Dilation additionally enlarges thin structures (e.g. for chairs).
             depthmap -= self.options.depth_offset_factor * self.voxel_size
-            depthmap = ndimage.morphology.grey_erosion(depthmap, size=(3, 3))
+            depthmap = ndimage.grey_erosion(depthmap, size=(3, 3))
 
             depthmaps.append(depthmap)
 
@@ -318,7 +323,7 @@ class Fusion:
         Rs = self.get_views()
 
         timer.reset()
-        mesh = common.Mesh.from_off(filepath)
+        mesh = common.Mesh.from_obj(filepath)
         depths = self.render(mesh, Rs)
 
         depth_file = self.get_outpath(filepath)
@@ -351,9 +356,9 @@ class Fusion:
         t_loc, t_scale = self.get_transform(modelname)
         vertices = t_loc + t_scale * vertices
 
-        off_file = self.get_outpath(filepath)
-        libmcubes.export_off(vertices, triangles, off_file)
-        print('[Data] wrote %s (%f seconds)' % (off_file, timer.elapsed()))
+        obj_file = self.get_outpath(filepath)
+        libmcubes.export_obj(vertices, triangles, obj_file)
+        print('[Data] wrote %s (%f seconds)' % (obj_file, timer.elapsed()))
 
     def run_sample(self, filepath):
         """

@@ -1,8 +1,10 @@
 import os
 import common
 import argparse
-import numpy as np
+from pathlib import Path
 from multiprocessing import Pool
+
+import numpy as np
 
 
 class Scale:
@@ -25,7 +27,7 @@ class Scale:
         :return: parser
         """
 
-        parser = argparse.ArgumentParser(description='Scale a set of meshes stored as OFF files.')
+        parser = argparse.ArgumentParser(description='Scale a set of meshes stored as OBJ files.')
         input_group = parser.add_mutually_exclusive_group(required=True)
         input_group.add_argument('--in_dir', type=str,
                                  help='Path to input directory.')
@@ -52,10 +54,8 @@ class Scale:
         :param directory: path to directory
         :return: list of files
         """
-
-        files = []
-        for filename in os.listdir(directory):
-            files.append(os.path.normpath(os.path.join(directory, filename)))
+        
+        files = [file for file in Path(directory).glob("**/*.obj")]
 
         return files
 
@@ -81,8 +81,10 @@ class Scale:
 
 
     def get_outpath(self, filepath):
-        filename_m = os.path.basename(filepath)
-        outpath_m = os.path.join(self.options.out_dir, filename_m)
+        model_id = filepath.parts[-3]
+        filename_m = "model_scaled.obj"
+        os.makedirs(os.path.join(self.options.out_dir, model_id), exist_ok=True)
+        outpath_m = os.path.join(self.options.out_dir, model_id, filename_m)
 
         if self.options.t_dir is not None:
             filename_t =  os.path.splitext(filename_m)[0] + '.npz'
@@ -95,7 +97,7 @@ class Scale:
 
     def run(self):
         """
-        Run the tool, i.e. scale all found OFF files.
+        Run the tool, i.e. scale all found OBJ files.
         """
         common.makedir(self.options.out_dir)
         if self.options.t_dir is not None:
@@ -111,7 +113,7 @@ class Scale:
                 p.map(self.run_file, files)
 
     def run_file(self, filepath):
-        mesh = common.Mesh.from_off(filepath)
+        mesh = common.Mesh.from_obj(filepath)
 
         # Get extents of model.
         bb_min, bb_max = mesh.extents()
@@ -152,7 +154,7 @@ class Scale:
 
         outpath_m, outpath_t = self.get_outpath(filepath)
 
-        mesh.to_off(outpath_m)
+        mesh.to_obj(outpath_m)
 
         if outpath_t is not None:
             np.savez(outpath_t,

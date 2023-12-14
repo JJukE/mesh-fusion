@@ -1,6 +1,6 @@
 # Watertight and Simplified Meshes through TSDF Fusion
 
-My version of [https://github.com/autonomousvision/occupancy_networks/tree/master/external/mesh-fusion].
+My version of [https://github.com/autonomousvision/occupancy_networks/tree/master/external/mesh-fusion] for watertighting ShapeNet(v2) dataset.
 
 This repository contains a simply Python pipeline for obtaining watertight
 and simplified meshes from arbitrary triangular meshes, given in `.off` format.
