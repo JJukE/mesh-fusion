@@ -1,7 +1,10 @@
 import os
 import argparse
-import ntpath
+from pathlib import Path
+
 import common
+# import pymeshlab
+from tqdm.auto import tqdm
 
 
 class Simplification:
@@ -32,6 +35,7 @@ class Simplification:
                                  help='Path to input directory.')
         input_group.add_argument('--in_file', type=str,
                                  help='Path to input directory.')
+        parser.add_argument("--n_views", type=int, default=100, help="Number of views per model.")
         parser.add_argument('--out_dir', type=str,
                             help='Path to output directory; files within are overwritten!')
 
@@ -45,11 +49,7 @@ class Simplification:
         :return: list of files
         """
 
-        files = []
-        for filename in os.listdir(directory):
-            files.append(os.path.normpath(os.path.join(directory, filename)))
-
-        return files
+        return [file for file in Path(directory).glob("**/*fused_{}.obj".format(self.options.n_views))]
 
     def get_in_files(self):
         if self.options.in_dir is not None:
@@ -60,6 +60,10 @@ class Simplification:
             files = [self.options.in_file]
 
         return files
+    
+    def get_out_path(self, filepath):
+        model_id = filepath.parts[-2]
+        return os.path.join(self.options.out_dir, model_id, "model_simplified.obj")
 
     def run(self):
         """
@@ -69,10 +73,10 @@ class Simplification:
         common.makedir(self.options.out_dir)
         files = self.get_in_files()
 
-        for filepath in files:
+        for filepath in tqdm(files, total=len(files)):
             os.system('meshlabserver -i %s -o %s -s %s' % (
                 filepath,
-                os.path.join(self.options.out_dir, ntpath.basename(filepath)),
+                self.get_out_path(filepath),
                 self.simplification_script
             ))
 

@@ -87,8 +87,8 @@ class Fusion:
 
         parser.add_argument('--n_points', type=int, default=100000,
                             help='Number of points to sample per model.')
-        parser.add_argument('--n_views', type=int, default=20,
-                            help='Number of views per model.') # TODO: 20 vs 100?
+        parser.add_argument('--n_views', type=int, default=100,
+                            help='Number of views per model.')
         parser.add_argument('--image_height', type=int, default=640,
                             help='Depth image height.')
         parser.add_argument('--image_width', type=int, default=640,

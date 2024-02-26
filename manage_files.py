@@ -28,8 +28,8 @@ if __name__ == "__main__":
     # paths_temp = list(Path(args.data_dir).glob("**/*model_normalized.obj")) ## for rendering without textures
     # print(len(paths_temp))
     # paths = list(Path(args.data_dir).glob("**/*model_normalized_nomtl.obj"))
-    paths = list(Path(args.data_dir).glob("**/*.npz"))
-    print(len(paths))
+    # paths = list(Path(args.data_dir).glob("**/*.npz"))
+    # print(len(paths))
 
     # # # split train, valid, test model_ids and save them.
     # num_trains = int(len(paths) * 0.96)
@@ -72,7 +72,9 @@ if __name__ == "__main__":
     #     if path.parts[-3] not in model_ids:
     #         print(path.parts[-3])
     
-    # paths_ = list(Path(args.data_dir).glob("**/*volume_6M.npy"))
+    paths_ = list(Path(args.data_dir).glob("**/*volume_500K.npy"))
+    print(len(paths_))
+    print(paths_[0])
     
     # paths_200k = []
     # paths_500k = []
@@ -87,14 +89,14 @@ if __name__ == "__main__":
     # print("Number of paths containing 500K points: ", len(paths_200k))
     # print("Number of paths containing 200K points: ", len(paths_500k))
 
-    # # move specific files to the destination
-    # destinations = []
-    # for path in paths_:
-    #     destination = Path(*path.parts[:4]) / "volume_6M" / Path(*path.parts[5:])
-    #     destination.parent.mkdir(parents=True, exist_ok=True)
-    #     shutil.move(str(path), str(destination))
-    #     # destinations.append(destination)
-    # print(destinations)
+    # move specific files to the destination
+    destinations = []
+    for path in paths_:
+        destination = Path(*path.parts[:4]) / "volume_500K" / Path(*path.parts[5:])
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(path), str(destination))
+        # destinations.append(destination)
+    print(destinations)
 
     # top 500 samples from sorted files
     # paths_ = sorted(paths_, key=lambda file: str(file))
