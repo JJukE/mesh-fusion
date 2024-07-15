@@ -7,6 +7,7 @@ import common
 import argparse
 import ntpath
 from pathlib import Path
+from tqdm.auto import tqdm
 
 # Import shipped libraries.
 import librender
@@ -127,7 +128,7 @@ class Fusion:
         if self.options.mode == "render":
             files = [file for file in Path(directory).glob("**/*model_scaled.obj")]
         elif self.options.mode == "fuse":
-            files = [file for file in Path(directory).glob("**/*rendered_{}.h5".format(self.options.n_views))]
+            files = [file for file in Path(directory).glob("**/*rendered.h5")]
         else:
             raise NotImplementedError
 
@@ -153,10 +154,10 @@ class Fusion:
         model_id = filepath.parts[-2]
         filename = "model"
         if self.options.mode == 'render':
-            outpath = os.path.join(self.options.out_dir, model_id, filename + '_rendered_{}.h5'.format(self.options.n_views))
+            outpath = os.path.join(self.options.out_dir, model_id, filename + '_rendered.h5')
         elif self.options.mode == 'fuse':
             modelname = os.path.splitext(os.path.splitext(filename)[0])[0]
-            outpath = os.path.join(self.options.out_dir, model_id, modelname + '_fused_{}.obj'.format(self.options.n_views))
+            outpath = os.path.join(self.options.out_dir, model_id, modelname + '_fused.obj')
         elif self.options.mode == 'sample':
             modelname = os.path.splitext(os.path.splitext(filename)[0])[0]
             outpath = os.path.join(self.options.out_dir, model_id, modelname + '.npz')
@@ -309,11 +310,14 @@ class Fusion:
             exit()
 
         if self.options.n_proc == 0:
-            for filepath in files:
+            for filepath in tqdm(files, total=len(files)):
                 method(filepath)
         else:
             with Pool(self.options.n_proc) as p:
-                p.map(method, files)
+                # p.map(method, files)
+                with tqdm(total=len(files)) as pbar:
+                    for _ in p.imap_unordered(method, files):
+                        pbar.update()
 
     def run_render(self, filepath):
         """
@@ -328,7 +332,7 @@ class Fusion:
 
         depth_file = self.get_outpath(filepath)
         common.write_hdf5(depth_file, np.array(depths))
-        print('[Data] wrote %s (%f seconds)' % (depth_file, timer.elapsed()))
+        # print('[Data] wrote %s (%f seconds)' % (depth_file, timer.elapsed()))
 
     def run_fuse(self, filepath):
         """
@@ -358,7 +362,7 @@ class Fusion:
 
         obj_file = self.get_outpath(filepath)
         libmcubes.export_obj(vertices, triangles, obj_file)
-        print('[Data] wrote %s (%f seconds)' % (obj_file, timer.elapsed()))
+        # print('[Data] wrote %s (%f seconds)' % (obj_file, timer.elapsed()))
 
     def run_sample(self, filepath):
         """
@@ -389,7 +393,7 @@ class Fusion:
         out_file = self.get_outpath(filepath)
         np.savez(out_file, points=points, occupancy=occupancy, loc=t_loc, scale=t_scale)
 
-        print('[Data] wrote %s (%f seconds)' % (out_file, timer.elapsed()))
+        # print('[Data] wrote %s (%f seconds)' % (out_file, timer.elapsed()))
 
     def get_transform(self, modelname):
         if self.options.t_dir is not None:

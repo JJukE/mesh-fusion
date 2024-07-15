@@ -5,6 +5,7 @@ from pathlib import Path
 from multiprocessing import Pool
 
 import numpy as np
+from tqdm.auto import tqdm
 
 
 class Scale:
@@ -106,11 +107,13 @@ class Scale:
         files = self.get_in_files()
 
         if self.options.n_proc == 0:
-            for filepath in files:
+            for filepath in tqdm(files, total=len(files)):
                 self.run_file(filepath)
         else:
             with Pool(self.options.n_proc) as p:
-                p.map(self.run_file, files)
+                with tqdm(total=len(files)) as pbar:
+                    for _ in p.imap_unordered(self.run_file, files):
+                        pbar.update()
 
     def run_file(self, filepath):
         mesh = common.Mesh.from_obj(filepath)
@@ -141,13 +144,13 @@ class Scale:
         mesh.translate(translation)
         mesh.scale(scales_inv)
 
-        print('[Data] %s extents before %f - %f, %f - %f, %f - %f'
-            % (os.path.basename(filepath),
-                bb_min[0], bb_max[0], bb_min[1], bb_max[1], bb_min[2], bb_max[2]))
+        # print('[Data] %s extents before %f - %f, %f - %f, %f - %f'
+        #     % (os.path.basename(filepath),
+        #         bb_min[0], bb_max[0], bb_min[1], bb_max[1], bb_min[2], bb_max[2]))
         bb1_min, bb1_max = mesh.extents()
-        print('[Data] %s extents after %f - %f, %f - %f, %f - %f'
-            % (os.path.basename(filepath),
-                bb1_min[0], bb1_max[0], bb1_min[1], bb1_max[1], bb1_min[2], bb1_max[2]))
+        # print('[Data] %s extents after %f - %f, %f - %f, %f - %f'
+        #     % (os.path.basename(filepath),
+        #         bb1_min[0], bb1_max[0], bb1_min[1], bb1_max[1], bb1_min[2], bb1_max[2]))
 
         # May also switch axes if necessary.
         # mesh.switch_axes(1, 2)
